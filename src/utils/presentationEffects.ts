@@ -49,7 +49,12 @@ export function initMouseTracking(container: HTMLElement) {
     
     const scene = container.querySelector('.scene-container');
     if (scene && scene instanceof HTMLElement) {
-      scene.style.transform = `perspective(2000px) rotateX(${-currentRotationX}deg) rotateY(${currentRotationY}deg) scale(${scale})`;
+      scene.style.transform = `
+        perspective(2000px) 
+        rotateX(${-currentRotationX}deg) 
+        rotateY(${currentRotationY}deg) 
+        scale(${scale})
+      `;
     }
     
     requestAnimationFrame(animate);
@@ -124,15 +129,16 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
   
   const containerWidth = container.clientWidth;
   const containerHeight = container.clientHeight;
-  const depthLayers = [-1000, -500, 0, 500, 1000];
+  const depthLayers = [-2000, -1500, -1000, -500, 0, 500, 1000, 1500, 2000];
   
   messages.forEach((text) => {
     depthLayers.forEach((depth) => {
       const messageEl = createAndAppendElement(sceneContainer, 'floating-message');
       messageEl.innerText = text;
       
-      const scale = 1 + (depth / 2000);
-      const fontSize = Math.max(12, 24 * scale);
+      const scale = Math.max(0.5, 1 + (depth / 4000));
+      const fontSize = Math.max(16, 24 * scale);
+      const opacity = Math.max(0.4, 1 - Math.abs(depth/2000));
       
       Object.assign(messageEl.style, {
         position: 'absolute',
@@ -141,14 +147,15 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
         fontWeight: 'bold',
         textShadow: '0 0 20px #ffffff, 0 0 30px #ff69b4, 0 0 40px #ff69b4',
         whiteSpace: 'nowrap',
-        opacity: '0',
-        zIndex: String(Math.floor(depth)),
+        opacity: String(opacity),
+        zIndex: String(Math.floor(2000 + depth)),
         transform: `translateZ(${depth}px)`,
         pointerEvents: 'none',
-        filter: `blur(${Math.abs(depth) / 4000}px)`,
-        transition: 'color 2s ease-in-out, text-shadow 2s ease-in-out',
+        backfaceVisibility: 'visible',
         transformStyle: 'preserve-3d',
-        perspective: '1000px'
+        transition: 'color 2s ease-in-out, text-shadow 2s ease-in-out',
+        filter: `blur(${Math.abs(depth) / 6000}px)`,
+        willChange: 'transform, opacity, color'
       });
       
       messageElements.push(messageEl);
@@ -168,7 +175,6 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
   gsap.set(element, {
     x: startX,
     y: startY,
-    z: depth,
     opacity: 0
   });
   
@@ -178,15 +184,15 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
   });
   
   tl.to(element, {
-    opacity: Math.max(0.3, 1 - Math.abs(depth/1000)),
-    duration: 0.5,
+    opacity: Math.max(0.4, 1 - Math.abs(depth/2000)),
+    duration: 1,
     ease: "power2.inOut"
   });
   
   tl.to(element, {
     color: '#ff69b4',
     textShadow: '0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4',
-    duration: 2,
+    duration: 3,
     ease: "power2.inOut"
   }, "-=0.5");
   
@@ -199,9 +205,9 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
   
   tl.to(element, {
     opacity: 0,
-    duration: 0.5,
+    duration: 1,
     ease: "power2.in"
-  }, "-=1");
+  }, "-=1.5");
   
   tl.set(element, {
     x: Math.random() * containerWidth,

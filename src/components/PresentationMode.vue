@@ -135,11 +135,14 @@ const initializePresentation = () => {
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.1s ease-out;
+  perspective: 2000px;
+  transform-origin: center center;
 }
 
 :deep(.floating-message) {
   filter: blur(0.5px);
   text-shadow: 0 0 30px #ffffff, 0 0 40px #ff69b4, 0 0 50px #ff69b4, 0 0 60px #ff69b4;
-  backface-visibility: hidden;
+  backface-visibility: visible;
+  transform-style: preserve-3d;
 }
 </style>
