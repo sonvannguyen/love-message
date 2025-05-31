@@ -115,22 +115,30 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
   const containerWidth = container.clientWidth;
   const containerHeight = container.clientHeight;
   
+  // Create multiple depth layers
+  const depthLayers = [-1000, -500, 0, 500, 1000];
+  
   messages.forEach((text) => {
-    for (let i = 0; i < 10; i++) {
+    depthLayers.forEach((depth) => {
       const messageEl = document.createElement('div');
       messageEl.classList.add('floating-message');
       messageEl.innerText = text;
       messageEl.style.position = 'absolute';
       messageEl.style.color = '#ffffff';
-      messageEl.style.fontSize = `${Math.random() * 10 + 20}px`;
+      
+      // Adjust size based on depth layer
+      const scale = 1 + (depth / 2000); // Objects further back appear smaller
+      const fontSize = Math.max(12, 24 * scale);
+      messageEl.style.fontSize = `${fontSize}px`;
+      
       messageEl.style.fontWeight = 'bold';
       messageEl.style.textShadow = '0 0 20px #ffffff, 0 0 30px #ff69b4, 0 0 40px #ff69b4';
       messageEl.style.whiteSpace = 'nowrap';
       messageEl.style.opacity = '0';
-      messageEl.style.zIndex = '2';
-      messageEl.style.transform = 'translateZ(0px)';
+      messageEl.style.zIndex = `${Math.floor(depth)}`;
+      messageEl.style.transform = `translateZ(${depth}px)`;
       messageEl.style.pointerEvents = 'none';
-      messageEl.style.filter = 'blur(0.5px)';
+      messageEl.style.filter = `blur(${Math.abs(depth) / 4000}px)`; // Depth-based blur
       messageEl.style.transition = 'color 2s ease-in-out, text-shadow 2s ease-in-out';
       messageEl.style.transformStyle = 'preserve-3d';
       messageEl.style.perspective = '1000px';
@@ -138,17 +146,16 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
       sceneContainer.appendChild(messageEl);
       messageElements.push(messageEl);
       
-      animateFloatingMessage(messageEl, containerWidth, containerHeight);
-    }
+      animateFloatingMessage(messageEl, containerWidth, containerHeight, depth);
+    });
   });
   
   return messageElements;
 }
 
-function animateFloatingMessage(element: HTMLElement, containerWidth: number, containerHeight: number) {
+function animateFloatingMessage(element: HTMLElement, containerWidth: number, containerHeight: number, depth: number) {
   const startX = Math.random() * containerWidth;
-  const startY = -50; // Start above the viewport
-  const depth = Math.random() * 500; // Random Z depth for 3D effect
+  const startY = -50 - Math.abs(depth/2); // Stagger start position based on depth
   
   gsap.set(element, {
     x: startX,
@@ -159,12 +166,12 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
   
   const tl = gsap.timeline({
     repeat: -1,
-    repeatDelay: Math.random() * 2
+    repeatDelay: Math.random() * 2 + (Math.abs(depth) / 1000) // Depth-based delay
   });
   
   // Fade in with initial white color
   tl.to(element, {
-    opacity: 0.9,
+    opacity: Math.max(0.3, 1 - Math.abs(depth/1000)), // Depth-based opacity
     duration: 0.5,
     ease: "power2.inOut"
   });
@@ -177,10 +184,10 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
     ease: "power2.inOut"
   }, "-=0.5");
   
-  // Fall down with 3D movement
+  // Fall down with subtle horizontal movement
   tl.to(element, {
     y: containerHeight + 100,
-    z: depth + Math.random() * 200 - 100, // Slight Z movement for depth
+    x: startX + Math.random() * 100 - 50,
     duration: Math.random() * 5 + 8,
     ease: "none",
   }, "-=2");
@@ -196,7 +203,6 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
   tl.set(element, {
     x: Math.random() * containerWidth,
     y: startY,
-    z: Math.random() * 500,
     color: '#ffffff',
     textShadow: '0 0 20px #ffffff, 0 0 30px #ff69b4, 0 0 40px #ff69b4'
   });
