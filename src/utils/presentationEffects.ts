@@ -47,7 +47,7 @@ export function initMouseTracking(container: HTMLElement) {
     
     const scene = container.querySelector('.scene-container') as HTMLElement;
     if (scene) {
-      scene.style.transform = `rotateX(${-currentRotationX}deg) rotateY(${currentRotationY}deg) scale(${scale})`;
+      scene.style.transform = `perspective(2000px) rotateX(${-currentRotationX}deg) rotateY(${currentRotationY}deg) scale(${scale})`;
     }
     
     requestAnimationFrame(animate);
@@ -131,6 +131,9 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
       messageEl.style.transform = 'translateZ(0px)';
       messageEl.style.pointerEvents = 'none';
       messageEl.style.filter = 'blur(0.5px)';
+      messageEl.style.transition = 'color 2s ease-in-out, text-shadow 2s ease-in-out';
+      messageEl.style.transformStyle = 'preserve-3d';
+      messageEl.style.perspective = '1000px';
       
       sceneContainer.appendChild(messageEl);
       messageElements.push(messageEl);
@@ -145,10 +148,12 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
 function animateFloatingMessage(element: HTMLElement, containerWidth: number, containerHeight: number) {
   const startX = Math.random() * containerWidth;
   const startY = -50; // Start above the viewport
+  const depth = Math.random() * 500; // Random Z depth for 3D effect
   
   gsap.set(element, {
     x: startX,
     y: startY,
+    z: depth,
     opacity: 0
   });
   
@@ -157,27 +162,42 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
     repeatDelay: Math.random() * 2
   });
   
+  // Fade in with initial white color
   tl.to(element, {
     opacity: 0.9,
     duration: 0.5,
     ease: "power2.inOut"
   });
   
+  // Smoothly transition to pink
   tl.to(element, {
-    y: containerHeight + 100, // Move down beyond viewport
-    duration: Math.random() * 5 + 8,
-    ease: "none",
+    color: '#ff69b4',
+    textShadow: '0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4',
+    duration: 2,
+    ease: "power2.inOut"
   }, "-=0.5");
   
+  // Fall down with 3D movement
+  tl.to(element, {
+    y: containerHeight + 100,
+    z: depth + Math.random() * 200 - 100, // Slight Z movement for depth
+    duration: Math.random() * 5 + 8,
+    ease: "none",
+  }, "-=2");
+  
+  // Fade out
   tl.to(element, {
     opacity: 0,
     duration: 0.5,
     ease: "power2.in"
   }, "-=1");
   
-  // Randomly reposition X coordinate for next iteration
+  // Reset for next iteration
   tl.set(element, {
     x: Math.random() * containerWidth,
-    y: startY
+    y: startY,
+    z: Math.random() * 500,
+    color: '#ffffff',
+    textShadow: '0 0 20px #ffffff, 0 0 30px #ff69b4, 0 0 40px #ff69b4'
   });
 }

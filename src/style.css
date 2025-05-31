@@ -95,6 +95,16 @@ h1, h2, h3 {
   height: 100%;
 }
 
+.scene-container {
+  transform-style: preserve-3d;
+  perspective: 2000px;
+}
+
+.floating-message {
+  backface-visibility: hidden;
+  will-change: transform, opacity, color;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
