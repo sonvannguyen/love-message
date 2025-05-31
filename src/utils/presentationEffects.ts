@@ -42,39 +42,47 @@ export function initMouseTracking(container: HTMLElement) {
   });
 
   function animate() {
+    if (!container.isConnected) return;
+    
     currentRotationX += (targetRotationX - currentRotationX) * 0.1;
     currentRotationY += (targetRotationY - currentRotationY) * 0.1;
     
-    const scene = container.querySelector('.scene-container') as HTMLElement;
-    if (scene) {
+    const scene = container.querySelector('.scene-container');
+    if (scene && scene instanceof HTMLElement) {
       scene.style.transform = `perspective(2000px) rotateX(${-currentRotationX}deg) rotateY(${currentRotationY}deg) scale(${scale})`;
     }
     
     requestAnimationFrame(animate);
   }
   
-  animate();
+  requestAnimationFrame(animate);
+}
+
+function createAndAppendElement(container: HTMLElement, className: string): HTMLElement {
+  const element = document.createElement('div');
+  element.className = className;
+  container.appendChild(element);
+  return element;
 }
 
 export function createHeartParticles(container: HTMLElement, count: number): HTMLElement[] {
   const hearts: HTMLElement[] = [];
   
   for (let i = 0; i < count; i++) {
-    const heart = document.createElement('div');
-    heart.classList.add('heart-particle');
+    const heart = createAndAppendElement(container, 'heart-particle');
     heart.innerHTML = '❤';
-    heart.style.position = 'absolute';
-    heart.style.color = '#ff4d8b';
-    heart.style.fontSize = `${Math.random() * 20 + 10}px`;
-    heart.style.opacity = '0';
-    heart.style.left = `${Math.random() * 100}%`;
-    heart.style.top = '-50px';
-    heart.style.zIndex = '1';
-    heart.style.pointerEvents = 'none';
+    Object.assign(heart.style, {
+      position: 'absolute',
+      color: '#ff4d8b',
+      fontSize: `${Math.random() * 20 + 10}px`,
+      opacity: '0',
+      left: `${Math.random() * 100}%`,
+      top: '-50px',
+      zIndex: '1',
+      pointerEvents: 'none'
+    });
     
-    container.appendChild(heart);
     hearts.push(heart);
-    
     animateHeart(heart);
   }
   
@@ -82,6 +90,8 @@ export function createHeartParticles(container: HTMLElement, count: number): HTM
 }
 
 function animateHeart(heart: HTMLElement) {
+  if (!heart.isConnected) return;
+  
   const duration = Math.random() * 5 + 5;
   const delay = Math.random() * 10;
   
@@ -101,51 +111,47 @@ function animateHeart(heart: HTMLElement) {
     delay: delay,
     ease: "none",
     onComplete: () => {
-      animateHeart(heart);
+      if (heart.isConnected) {
+        animateHeart(heart);
+      }
     }
   });
 }
 
 export function createFloatingMessages(container: HTMLElement, messages: string[]): HTMLElement[] {
   const messageElements: HTMLElement[] = [];
-  const sceneContainer = document.createElement('div');
-  sceneContainer.classList.add('scene-container');
-  container.appendChild(sceneContainer);
+  const sceneContainer = createAndAppendElement(container, 'scene-container');
   
   const containerWidth = container.clientWidth;
   const containerHeight = container.clientHeight;
-  
-  // Create multiple depth layers
   const depthLayers = [-1000, -500, 0, 500, 1000];
   
   messages.forEach((text) => {
     depthLayers.forEach((depth) => {
-      const messageEl = document.createElement('div');
-      messageEl.classList.add('floating-message');
+      const messageEl = createAndAppendElement(sceneContainer, 'floating-message');
       messageEl.innerText = text;
-      messageEl.style.position = 'absolute';
-      messageEl.style.color = '#ffffff';
       
-      // Adjust size based on depth layer
-      const scale = 1 + (depth / 2000); // Objects further back appear smaller
+      const scale = 1 + (depth / 2000);
       const fontSize = Math.max(12, 24 * scale);
-      messageEl.style.fontSize = `${fontSize}px`;
       
-      messageEl.style.fontWeight = 'bold';
-      messageEl.style.textShadow = '0 0 20px #ffffff, 0 0 30px #ff69b4, 0 0 40px #ff69b4';
-      messageEl.style.whiteSpace = 'nowrap';
-      messageEl.style.opacity = '0';
-      messageEl.style.zIndex = `${Math.floor(depth)}`;
-      messageEl.style.transform = `translateZ(${depth}px)`;
-      messageEl.style.pointerEvents = 'none';
-      messageEl.style.filter = `blur(${Math.abs(depth) / 4000}px)`; // Depth-based blur
-      messageEl.style.transition = 'color 2s ease-in-out, text-shadow 2s ease-in-out';
-      messageEl.style.transformStyle = 'preserve-3d';
-      messageEl.style.perspective = '1000px';
+      Object.assign(messageEl.style, {
+        position: 'absolute',
+        color: '#ffffff',
+        fontSize: `${fontSize}px`,
+        fontWeight: 'bold',
+        textShadow: '0 0 20px #ffffff, 0 0 30px #ff69b4, 0 0 40px #ff69b4',
+        whiteSpace: 'nowrap',
+        opacity: '0',
+        zIndex: String(Math.floor(depth)),
+        transform: `translateZ(${depth}px)`,
+        pointerEvents: 'none',
+        filter: `blur(${Math.abs(depth) / 4000}px)`,
+        transition: 'color 2s ease-in-out, text-shadow 2s ease-in-out',
+        transformStyle: 'preserve-3d',
+        perspective: '1000px'
+      });
       
-      sceneContainer.appendChild(messageEl);
       messageElements.push(messageEl);
-      
       animateFloatingMessage(messageEl, containerWidth, containerHeight, depth);
     });
   });
@@ -154,8 +160,10 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
 }
 
 function animateFloatingMessage(element: HTMLElement, containerWidth: number, containerHeight: number, depth: number) {
+  if (!element.isConnected) return;
+  
   const startX = Math.random() * containerWidth;
-  const startY = -50 - Math.abs(depth/2); // Stagger start position based on depth
+  const startY = -50 - Math.abs(depth/2);
   
   gsap.set(element, {
     x: startX,
@@ -166,17 +174,15 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
   
   const tl = gsap.timeline({
     repeat: -1,
-    repeatDelay: Math.random() * 2 + (Math.abs(depth) / 1000) // Depth-based delay
+    repeatDelay: Math.random() * 2 + (Math.abs(depth) / 1000)
   });
   
-  // Fade in with initial white color
   tl.to(element, {
-    opacity: Math.max(0.3, 1 - Math.abs(depth/1000)), // Depth-based opacity
+    opacity: Math.max(0.3, 1 - Math.abs(depth/1000)),
     duration: 0.5,
     ease: "power2.inOut"
   });
   
-  // Smoothly transition to pink
   tl.to(element, {
     color: '#ff69b4',
     textShadow: '0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4',
@@ -184,7 +190,6 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
     ease: "power2.inOut"
   }, "-=0.5");
   
-  // Fall down with subtle horizontal movement
   tl.to(element, {
     y: containerHeight + 100,
     x: startX + Math.random() * 100 - 50,
@@ -192,14 +197,12 @@ function animateFloatingMessage(element: HTMLElement, containerWidth: number, co
     ease: "none",
   }, "-=2");
   
-  // Fade out
   tl.to(element, {
     opacity: 0,
     duration: 0.5,
     ease: "power2.in"
   }, "-=1");
   
-  // Reset for next iteration
   tl.set(element, {
     x: Math.random() * containerWidth,
     y: startY,
