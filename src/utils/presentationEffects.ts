@@ -1,7 +1,5 @@
 import { gsap } from 'gsap';
 
-let mouseX = 0;
-let mouseY = 0;
 let targetRotationX = 0;
 let targetRotationY = 0;
 let currentRotationX = 0;
@@ -19,9 +17,6 @@ export function initMouseTracking(container: HTMLElement) {
   });
 
   container.addEventListener('mousemove', (event) => {
-    mouseX = event.clientX;
-    mouseY = event.clientY;
-    
     if (isDragging) {
       targetRotationY = (event.clientX - startX) * 0.5;
       targetRotationX = (event.clientY - startY) * 0.5;
