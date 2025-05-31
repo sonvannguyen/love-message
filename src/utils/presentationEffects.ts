@@ -82,7 +82,7 @@ export function createHeartParticles(container: HTMLElement, count: number): HTM
 }
 
 function animateHeart(heart: HTMLElement) {
-  const duration = Math.random() * 5 + 5; // Faster heart animation
+  const duration = Math.random() * 5 + 5;
   const delay = Math.random() * 10;
   
   gsap.set(heart, {
@@ -130,6 +130,7 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
       messageEl.style.zIndex = '2';
       messageEl.style.transform = 'translateZ(0px)';
       messageEl.style.pointerEvents = 'none';
+      messageEl.style.filter = 'blur(0.5px)';
       
       sceneContainer.appendChild(messageEl);
       messageElements.push(messageEl);
@@ -142,47 +143,41 @@ export function createFloatingMessages(container: HTMLElement, messages: string[
 }
 
 function animateFloatingMessage(element: HTMLElement, containerWidth: number, containerHeight: number) {
-  const startX = Math.random() * containerWidth - containerWidth/2;
-  const startY = Math.random() * containerHeight - containerHeight/2;
-  const startZ = Math.random() * 2000 - 1000;
+  const startX = Math.random() * containerWidth;
+  const startY = -50; // Start above the viewport
   
   gsap.set(element, {
     x: startX,
     y: startY,
-    z: startZ,
-    opacity: 0,
-    scale: calculateScale(startZ)
+    opacity: 0
   });
   
   const tl = gsap.timeline({
     repeat: -1,
-    repeatDelay: Math.random()
+    repeatDelay: Math.random() * 2
   });
   
   tl.to(element, {
     opacity: 0.9,
-    duration: 1,
+    duration: 0.5,
     ease: "power2.inOut"
   });
   
   tl.to(element, {
-    y: `+=${containerHeight * 1.5}`, // Faster downward movement
-    x: `+=${Math.random() * 400 - 200}`,
-    z: Math.random() * 2000 - 1000,
-    rotationX: Math.random() * 360,
-    rotationY: Math.random() * 360,
-    rotationZ: Math.random() * 360,
-    duration: Math.random() * 8 + 8, // Faster overall animation
+    y: containerHeight + 100, // Move down beyond viewport
+    duration: Math.random() * 5 + 8,
     ease: "none",
   }, "-=0.5");
   
   tl.to(element, {
     opacity: 0,
-    duration: 1,
+    duration: 0.5,
     ease: "power2.in"
-  }, "-=2");
-}
-
-function calculateScale(z: number): number {
-  return 1 + (z / 2000);
+  }, "-=1");
+  
+  // Randomly reposition X coordinate for next iteration
+  tl.set(element, {
+    x: Math.random() * containerWidth,
+    y: startY
+  });
 }
